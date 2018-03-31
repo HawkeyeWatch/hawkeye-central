@@ -1,6 +1,10 @@
 'use strict';
 
 const jstp = require('metarhia-jstp');
+const config = require('./');
+const localNode = require('../models/localNode');
+
+const _nodes = new Map();
 
 module.exports.init = (serverEmitter) => {
   const app = new jstp.Application('serverRPC', {
@@ -15,14 +19,15 @@ module.exports.init = (serverEmitter) => {
             console.error(`Something went wrong: ${error}`);
             return;
           }
-          // TODO: Save proxy to some map
-          //localNodeProxy = proxy;
+          _nodes.set(connection.username, proxy);
+          connection.on('close', () => _nodes.delete(connection.username));
           return callback();
         });
       },
     },
   }, {
     serverService: {
+      // TODO: Implement events
       someEvent(connection, data) {
         console.log('received event from client:');
         console.log(data);
@@ -32,14 +37,24 @@ module.exports.init = (serverEmitter) => {
 
   const auth = {
     authenticate: (connection, application, strategy, credentials, cb) => {
-      console.log('Auth credentials: ', credentials);
-      console.log('Strategy: ', strategy);
-      console.log(connection.client);
-      // TODO: Find with mongoose
-      if (credentials[0] !== 'vasya') {
-        return cb(new Error('User not allowed'));
-      }
-      return cb(null, credentials[0]);
+      localNode.findOne({'jstpLogin': credentials[0]})
+        .then(localNode => {
+          if (!localNode) {
+            return cb(new Error('not authorized'));
+          }
+          localNode.verifyPassword(credentials[1], (err, match) => {
+            if (err) {
+              return cb(err);
+            }
+
+            if (!match) {
+              return cb(new Error('wrong password'));
+            }
+
+            return cb(null, credentials[0]);
+          });
+        })
+        .catch(err => cb(err));
     }
   };
 
@@ -47,8 +62,18 @@ module.exports.init = (serverEmitter) => {
     applications: [app],
     authPolicy: auth
   });
-  // TODO: Port from config
-  server.listen(5000, () => {
-    console.log('JSTP TCP server listening on port 5000');
+
+  server.listen(config.jstpPort, () => {
+    console.log(`JSTP TCP server listening on port ${config.jstpPort}`);
   });
 };
+
+// TODO: Implement node interaction methods
+
+methods.isNodeConnected = (jstpLogin) => _nodes.has(jstpLogin);
+methods.initDeploy = (jstpLogin, deploy) => null;
+methods.startApp = (jstpLogin, deployId) => null;
+methods.stopApp = (jstpLogin, deployId) => null;
+methods.fetchDeploy = (jstpLogin, deployId) => null;
+methods.getDeployStatus = (jstpLogin, deployId) => null;
+methods.removeDeploy = (jstpLogin, deployId) => null;

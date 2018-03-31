@@ -1,6 +1,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt-nodejs');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
 const config = require('../config');
@@ -19,7 +20,6 @@ const DeploySchema = new mongoose.Schema({
     // Oauth token for private repos
     type: String,
   },
-
 });
 
 const LocalNodeSchema = new mongoose.Schema({
@@ -50,7 +50,7 @@ LocalNodeSchema.plugin(beautifyUnique); // For easy duplicate handling
 
 LocalNodeSchema.pre('save', function(callback) {
   const node = this;
-  if (!user.isModified('jstpPassword')) {
+  if (!node.isModified('jstpPassword')) {
     return callback();
   }
 
@@ -87,4 +87,4 @@ LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
 
 mongoose.model('Deploy', DeploySchema);
 
-module.exports = mongoose.model('LocalNode', UserSchema);
+module.exports = mongoose.model('LocalNode', LocalNodeSchema);

@@ -8,4 +8,5 @@ module.exports = {
   session: {
     secret: 'verysecretmagicwords'
   },
+  jstpPort: 3228,
 };
