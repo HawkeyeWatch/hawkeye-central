@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt-nodejs');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
-const config = require('../config');
 
 const DeploySchema = new mongoose.Schema({
   repo: {

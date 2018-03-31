@@ -37,7 +37,7 @@ module.exports.init = (serverEmitter) => {
 
   const auth = {
     authenticate: (connection, application, strategy, credentials, cb) => {
-      localNode.findOne({'jstpLogin': credentials[0]})
+      localNode.findOne({ 'jstpLogin': credentials[0] })
         .then(localNode => {
           if (!localNode) {
             return cb(new Error('not authorized'));
