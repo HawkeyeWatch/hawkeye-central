@@ -11,6 +11,11 @@ const DeploySchema = new mongoose.Schema({
     required: true,
     // TODO: Validator
   },
+  branch: {
+    type: String,
+    required: true,
+    default: 'master',
+  },
   title: {
     type: String,
     required: true,

@@ -27,10 +27,81 @@ module.exports.init = (serverEmitter) => {
     },
   }, {
     serverService: {
-      // TODO: Implement events
       someEvent(connection, data) {
         console.log('received event from client:');
         console.log(data);
+      },
+      initStart(connection, data) {
+        console.log('received deploy init event');
+        // TODO: pass event to serverEmitter
+      },
+      initErr(connection, data) {
+        console.log('received deploy init error: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      fetchStart(connection, data) {
+        console.log('received deploy fetch event');
+        // TODO: pass event to serverEmitter
+      },
+      fetchErr(connection, data) {
+        console.log('received deploy fetch error: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      fetchEnd(connection, data) {
+        console.log('received deploy fetch end event');
+        // TODO: pass event to serverEmitter
+      },
+      buildStart(connection, data) {
+        console.log('received deploy build event');
+        // TODO: pass event to serverEmitter
+      },
+      buildErr(connection, data) {
+        console.log('received deploy build error: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      buildEnd(connection, data) {
+        console.log('received deploy build end event');
+        // TODO: pass event to serverEmitter
+      },
+      testStart(connection, data) {
+        console.log('received deploy test event');
+        // TODO: pass event to serverEmitter
+      },
+      testErr(connection, data) {
+        console.log('received deploy test error: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      testEnd(connection, data) {
+        console.log('received deploy test end event');
+        // TODO: pass event to serverEmitter
+      },
+      deployStart(connection, data) {
+        console.log('received deploy start event');
+        // TODO: pass event to serverEmitter
+      },
+      deployErr(connection, data) {
+        console.log('received deploy error: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      deployEnd(connection, data) {
+        console.log('received deploy end event');
+        // TODO: pass event to serverEmitter
+      },
+      runStdout(connection, data) {
+        console.log('received deploy stdout:', data);
+        // TODO: pass event to serverEmitter
+      },
+      runStderr(connection, data) {
+        console.log('received deploy stderr: ', data);
+        // TODO: pass event to serverEmitter
+      },
+      runErr(connection, data) {
+        console.log('received deploy run non-zero exit code event:', data);
+        // TODO: pass event to serverEmitter
+      },
+      runEnd(connection, data) {
+        console.log('received deploy run succesfull end event');
+        // TODO: pass event to serverEmitter
       },
     },
   });
@@ -68,12 +139,49 @@ module.exports.init = (serverEmitter) => {
   });
 };
 
+const isNodeConnected = (jstpLogin) => _nodes.has(jstpLogin);
+
 // TODO: Implement node interaction methods
 
-methods.isNodeConnected = (jstpLogin) => _nodes.has(jstpLogin);
-methods.initDeploy = (jstpLogin, deploy) => null;
-methods.startApp = (jstpLogin, deployId) => null;
-methods.stopApp = (jstpLogin, deployId) => null;
-methods.fetchDeploy = (jstpLogin, deployId) => null;
-methods.getDeployStatus = (jstpLogin, deployId) => null;
-methods.removeDeploy = (jstpLogin, deployId) => null;
+module.exports.isNodeConnected = isNodeConnected;
+
+module.exports.initDeploy = (jstpLogin, deploy) => {
+  return new Promise((resolve, reject) => {
+    if (isNodeConnected(jstpLogin)) {
+      let credentials = null;
+      if (deploy.token) {
+        credentials = { token };
+      }
+      _nodes.get(jstpLogin).initDeploy({
+       url: deploy.url,
+       deployId: deploy._id,
+       branch: deploy.branch,
+        credentials }, (err) => {
+          if (err) {
+            return reject(err);
+          }
+          return resolve();
+        });
+    } else {
+      return reject(new Error('node disconnected'));
+    }
+  });
+};
+
+module.exports.startApp = (jstpLogin, deployId) => {
+  return new Promise((resolve, reject) => {
+    if (isNodeConnected(jstpLogin)) {
+      _nodes.get(jstpLogin).startApp(deployId, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    }
+  });
+};
+
+module.exports.stopApp = (jstpLogin, deployId) => null;
+module.exports.fetchDeploy = (jstpLogin, deployId) => null;
+module.exports.getDeployStatus = (jstpLogin, deployId) => null;
+module.exports.removeDeploy = (jstpLogin, deployId) => null;
