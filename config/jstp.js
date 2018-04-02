@@ -142,6 +142,7 @@ module.exports.init = (serverEmitter) => {
 const isNodeConnected = (jstpLogin) => _nodes.has(jstpLogin);
 
 // TODO: Implement node interaction methods
+// TODO: Refactor
 
 module.exports.isNodeConnected = isNodeConnected;
 
@@ -181,7 +182,30 @@ module.exports.startApp = (jstpLogin, deployId) => {
   });
 };
 
-module.exports.stopApp = (jstpLogin, deployId) => null;
+module.exports.stopApp = (jstpLogin, deployId) => {
+  return new Promise((resolve, reject) => {
+    if (isNodeConnected(jstpLogin)) {
+      _nodes.get(jstpLogin).stopApp(deployId, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    }
+  });
+};
+
 module.exports.fetchDeploy = (jstpLogin, deployId) => null;
 module.exports.getDeployStatus = (jstpLogin, deployId) => null;
-module.exports.removeDeploy = (jstpLogin, deployId) => null;
+module.exports.removeApp = (jstpLogin, deployId) => {
+  return new Promise((resolve, reject) => {
+    if (isNodeConnected(jstpLogin)) {
+      _nodes.get(jstpLogin).removeApp(deployId, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    }
+  });
+};
