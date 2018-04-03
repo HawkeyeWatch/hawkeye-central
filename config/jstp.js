@@ -9,10 +9,6 @@ const _nodes = new Map();
 module.exports.init = (serverEmitter) => {
   const app = new jstp.Application('serverRPC', {
     serverService: {
-      sayHi(connection, name, callback) {
-        callback(null, `Hi, ${name}, I am server!`);
-      },
-
       subscribe(connection, callback) {
         connection.inspectInterface('clientService', (error, proxy) => {
           if (error) {
@@ -27,10 +23,6 @@ module.exports.init = (serverEmitter) => {
     },
   }, {
     serverService: {
-      someEvent(connection, data) {
-        console.log('received event from client:');
-        console.log(data);
-      },
       initStart(connection, data) {
         console.log('received deploy init event');
         // TODO: pass event to serverEmitter
@@ -178,6 +170,8 @@ module.exports.startApp = (jstpLogin, deployId) => {
         }
         return resolve();
       });
+    } else {
+      return reject(new Error('node disconnected'));
     }
   });
 };
@@ -191,12 +185,29 @@ module.exports.stopApp = (jstpLogin, deployId) => {
         }
         return resolve();
       });
+    } else {
+      return reject(new Error('node disconnected'));
     }
   });
 };
 
-module.exports.fetchDeploy = (jstpLogin, deployId) => null;
+module.exports.fetchDeploy = (jstpLogin, deployId) => {
+  return new Promise((resolve, reject) => {
+    if (isNodeConnected(jstpLogin)) {
+      _nodes.get(jstpLogin).fetch(deployId, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    } else {
+      return reject(new Error('node disconnected'));
+    }
+  });
+};
+
 module.exports.getDeployStatus = (jstpLogin, deployId) => null;
+
 module.exports.removeApp = (jstpLogin, deployId) => {
   return new Promise((resolve, reject) => {
     if (isNodeConnected(jstpLogin)) {
@@ -206,6 +217,8 @@ module.exports.removeApp = (jstpLogin, deployId) => {
         }
         return resolve();
       });
+    } else {
+      return reject(new Error('node disconnected'));
     }
   });
 };
