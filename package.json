@@ -22,7 +22,8 @@
     "metarhia-jstp": "^1.1.0",
     "moment": "^2.21.0",
     "mongoose": "^5.0.12",
-    "mongoose-beautiful-unique-validation": "^7.1.1"
+    "mongoose-beautiful-unique-validation": "^7.1.1",
+    "route-parser": "0.0.5"
   },
   "bin": {
     "git-watcher": "./index.js"
