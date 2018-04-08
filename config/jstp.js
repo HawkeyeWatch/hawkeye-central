@@ -146,74 +146,45 @@ class JSTPServer {
   }
 
   // TODO: Implement node interaction methods
-  // TODO: Refactor
 
-  initDeploy(jstpLogin, deploy) {
+  _callProcedure(jstpLogin, deployId, procedure) {
     return new Promise((resolve, reject) => {
       if (this.isNodeConnected(jstpLogin)) {
-        let credentials = null;
-        if (deploy.token) {
-          credentials = { token };
-        }
-        this._nodes.get(jstpLogin).initDeploy({
+        this._nodes.get(jstpLogin)[procedure](deployId, (err) => {
+          if (err) {
+            return reject(err);
+          }
+          return resolve();
+        });
+      } else {
+        return reject(new Error('node disconnected'));
+      }
+    });
+  }
+
+  initDeploy(jstpLogin, deploy) {
+    let credentials = null;
+    if (deploy.token) {
+      credentials = { token };
+    }
+
+    return this._callProcedure(jstpLogin, {
          url: deploy.url,
          deployId: deploy._id,
          branch: deploy.branch,
-          credentials }, (err) => {
-            if (err) {
-              return reject(err);
-            }
-            return resolve();
-          });
-      } else {
-        return reject(new Error('node disconnected'));
-      }
-    });
+          credentials }, initDeploy);
   }
 
   startApp(jstpLogin, deployId) {
-    return new Promise((resolve, reject) => {
-      if (this.isNodeConnected(jstpLogin)) {
-        this._nodes.get(jstpLogin).startApp(deployId, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve();
-        });
-      } else {
-        return reject(new Error('node disconnected'));
-      }
-    });
+    return this._callProcedure(jstpLogin, deployId, startApp);
   }
 
   stopApp(jstpLogin, deployId) {
-    return new Promise((resolve, reject) => {
-      if (this.isNodeConnected(jstpLogin)) {
-        this._nodes.get(jstpLogin).stopApp(deployId, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve();
-        });
-      } else {
-        return reject(new Error('node disconnected'));
-      }
-    });
+    return this._callProcedure(jstpLogin, deployId, stopApp);
   }
 
   fetchDeploy(jstpLogin, deployId) {
-    return new Promise((resolve, reject) => {
-      if (this.isNodeConnected(jstpLogin)) {
-        this._nodes.get(jstpLogin).fetch(deployId, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve();
-        });
-      } else {
-        return reject(new Error('node disconnected'));
-      }
-    });
+    return this._callProcedure(jstpLogin, deployId, fetch);
   }
 
   getDeployStatus(jstpLogin, deployId) {
@@ -221,18 +192,7 @@ class JSTPServer {
   }
 
   removeApp(jstpLogin, deployId) {
-    return new Promise((resolve, reject) => {
-      if (this.isNodeConnected(jstpLogin)) {
-        this._nodes.get(jstpLogin).removeApp(deployId, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve();
-        });
-      } else {
-        return reject(new Error('node disconnected'));
-      }
-    });
+    return this._callProcedure(jstpLogin, deployId, removeApp);
   }
 }
 
