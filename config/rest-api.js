@@ -2,12 +2,15 @@
 
 const http = require('http');
 const Router = require('../lib/router');
-
+const bodyUnpacker = require('../lib/body-unpacker');
+const root = require('../routes/root');
 module.exports = {};
 
-function someMiddleware(match, req, res, handler) {
-    res.write("middlewared ");
-    handler(match, req, res);
+function someMiddleware(handler) {
+    return (match, req, res) => {
+        res.write("middlewared ");
+        handler(match, req, res);
+    }
 }
 
 function noRouteHandler(path, method, req, res) {
@@ -26,18 +29,14 @@ function noMethodHandler(path, method, req, res) {
 
 const router = new Router(noRouteHandler, noMethodHandler);
 
-router.assignRoute('GET', '/', require('../routes/root'));
+router.assignRoute('GET', '/', root.get);
+router.assignRoute('POST', '/', bodyUnpacker(root.post));
 router.assignRoute(
     'GET',
     '/middlewaredemo',
-    (m, req, res) => 
-        someMiddleware(
-            m, 
-            req, 
-            res, 
-            require('../routes/root')
-        )
+    someMiddleware(require('../routes/root'))
 )
+
 
 module.exports.init = () => {
     return http.createServer(function (req, res) {
