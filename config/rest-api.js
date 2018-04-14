@@ -5,6 +5,8 @@ const Router = require('../lib/router');
 const bodyUnpacker = require('../lib/body-unpacker');
 const root = require('../routes/root');
 const user = require('../routes/user');
+const jwtAuth = require('../lib/jwt-auth');
+
 
 module.exports = {};
 
@@ -31,7 +33,7 @@ function noMethodHandler(path, method, req, res) {
 
 const router = new Router(noRouteHandler, noMethodHandler);
 
-router.assignRoute('GET', '/', root.get);
+router.assignRoute('GET', '/', jwtAuth(root.get));
 router.assignRoute('POST', '/', bodyUnpacker(root.post));
 router.assignRoute(
     'GET',
@@ -39,10 +41,12 @@ router.assignRoute(
     someMiddleware(require('../routes/root'))
 )
 router.assignRoute('POST', '/user', bodyUnpacker(user.post));
+router.assignRoute('GET', '/user/:login', user.getUserByLogin);
 
 
 module.exports.init = () => {
     return http.createServer(function (req, res) {
-        router.resolveRequest(req.url, req.method, req, res)
+        res.setHeader('Content-Type', 'application/json');
+        router.resolveRequest(req.url, req.method, req, res);
     }); 
 }

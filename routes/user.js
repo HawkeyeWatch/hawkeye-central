@@ -1,21 +1,44 @@
 'use strict';
 
-const userModel = require("../models/user")
+const User = require("../models/user")
+
 
 
 function registerUser(req, res) {
-    console.log("asdsad")
-    const newUser = JSON.stringify(req.body);
+    const newUser = JSON.parse(req.body);
     if (!newUser.name || !newUser.password || !newUser.login) {
-        res.write({error: "Not enough info."});
+        res.write(JSON.stringify({error: "Not enough info."}));
         res.end();
         return;
     }
-    res.write({success: "User created."});
-    res.end();
+    const u = new User(newUser);
+    u.save((error) => {
+        if (error) {
+            res.write(JSON.stringify({error: error.message}));
+            res.end();
+            return;
+        }
+        res.write(JSON.stringify({success: "User created."}));
+        res.end();
+    })
+}
+function getUserByLogin(req, res) {
+    User.findOne({login: req.match.login}).then(
+        r => {
+            if (r) {
+                res.write(JSON.stringify({name: r.name, login: r.login, token: r.generateJwt()})); 
+                res.end();
+            } else {
+                res.statusCode = 404;
+                res.statusMessage = "Not Found";
+                res.write("404 Not Found");
+                res.end();
+            }
+        }
+    )
 }
 
 module.exports = {
-    get: (req, res) => (res.write("hooray"), res.end()),
+    getUserByLogin,
     post: registerUser
 }

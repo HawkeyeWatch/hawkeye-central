@@ -12,6 +12,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
+    minlength: [4, 'Login too short'],
     validate: {
       validator: (v) => /^[a-zA-Z0-9]*$/.test(v),
       message: '{VALUE} is not a valid login'
@@ -81,10 +82,6 @@ UserSchema.methods.generateJwt = function(extended) {
     _id: this._id,
     exp: parseInt(expiry.unix())
   }, config.session.secret);
-};
-
-UserSchema.methods.getFullName = function() {
-  return `${this.name} ${this.full_name}`;
 };
 
 module.exports = mongoose.model('User', UserSchema);
