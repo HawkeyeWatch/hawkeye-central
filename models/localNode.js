@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt-nodejs');
+const rand = require('rand-token');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
 
 const DeploySchema = new mongoose.Schema({
@@ -37,11 +38,13 @@ const LocalNodeSchema = new mongoose.Schema({
   jstpLogin: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    default: () => rand.generate(8),
   },
   jstpPassword: {
     type: String,
     required: true,
+    default: () => rand.generate(8),
   },
   user: {
     type: Schema.Types.ObjectId,
@@ -82,10 +85,10 @@ LocalNodeSchema.pre('save', function(callback) {
 LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
   bcrypt.compare(pass, this.jstpPassword, (err, isMatch) => {
     if (err) {
-      cb(err);
+      return cb(err);
     }
 
-    cb(null, isMatch);
+    return cb(null, isMatch);
   });
 };
 
