@@ -145,16 +145,14 @@ class JSTPServer {
     return this._nodes.has(jstpLogin);
   }
 
-  // TODO: Implement node interaction methods
-
   _callProcedure(jstpLogin, deployId, procedure) {
     return new Promise((resolve, reject) => {
       if (this.isNodeConnected(jstpLogin)) {
-        this._nodes.get(jstpLogin)[procedure](deployId, (err) => {
+        this._nodes.get(jstpLogin)[procedure](deployId, (err, ...args) => {
           if (err) {
             return reject(err);
           }
-          return resolve();
+          return resolve(args);
         });
       } else {
         return reject(new Error('node disconnected'));
@@ -176,23 +174,23 @@ class JSTPServer {
   }
 
   startApp(jstpLogin, deployId) {
-    return this._callProcedure(jstpLogin, deployId, startApp);
+    return this._callProcedure(jstpLogin, deployId, 'startApp');
   }
 
   stopApp(jstpLogin, deployId) {
-    return this._callProcedure(jstpLogin, deployId, stopApp);
+    return this._callProcedure(jstpLogin, deployId, 'stopApp');
   }
 
   fetchDeploy(jstpLogin, deployId) {
-    return this._callProcedure(jstpLogin, deployId, fetch);
+    return this._callProcedure(jstpLogin, deployId, 'fetch');
   }
 
   getDeployStatus(jstpLogin, deployId) {
-    return null;
+    return this._callProcedure(jstpLogin, deployId, 'getStatus');
   }
 
   removeApp(jstpLogin, deployId) {
-    return this._callProcedure(jstpLogin, deployId, removeApp);
+    return this._callProcedure(jstpLogin, deployId, 'removeApp');
   }
 }
 
