@@ -26,10 +26,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  lastName: {
-    type: String,
-    required: false
-  },
 });
 
 UserSchema.plugin(beautifyUnique); // For easy duplicate handling

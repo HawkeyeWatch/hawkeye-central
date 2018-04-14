@@ -4,12 +4,14 @@ const http = require('http');
 const Router = require('../lib/router');
 const bodyUnpacker = require('../lib/body-unpacker');
 const root = require('../routes/root');
+const user = require('../routes/user');
+
 module.exports = {};
 
 function someMiddleware(handler) {
-    return (match, req, res) => {
+    return (req, res) => {
         res.write("middlewared ");
-        handler(match, req, res);
+        handler(req, res);
     }
 }
 
@@ -36,6 +38,7 @@ router.assignRoute(
     '/middlewaredemo',
     someMiddleware(require('../routes/root'))
 )
+router.assignRoute('POST', '/user', bodyUnpacker(user.post));
 
 
 module.exports.init = () => {
