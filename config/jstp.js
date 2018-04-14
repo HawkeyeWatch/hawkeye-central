@@ -14,6 +14,9 @@ class JSTPServer {
     return JSTPServer.instance;
   }
 
+  /**
+   Initialises JSTP server instance
+   */
   init(serverEmitter) {
     const serverInstance = this;
     const app = new jstp.Application('serverRPC', {
@@ -140,7 +143,11 @@ class JSTPServer {
       console.log(`JSTP TCP server listening on port ${config.jstpPort}`);
     });
   }
-
+  /**
+   Check if local node is currently connected
+   @param {string} jstpLogin - local node's login
+   @returns {boolean} true if node is connected
+   */
   isNodeConnected(jstpLogin) {
     return this._nodes.has(jstpLogin);
   }
@@ -160,6 +167,17 @@ class JSTPServer {
     });
   }
 
+  /**
+   Initialise deploy on local node
+   @param {string} jstpLogin - local node's login
+   @param {object} deploy - object containing deploy's info
+   @param {string} deploy.url - git url for deploy
+   @param {string} deploy.deployId - deploy's identifier
+   @param {string} [deploy.branch] - git repo branch to run deploy from
+   @param {string} [deploy.token] - ouath token for private repos
+   @returns {Promise} Promise object which rejects if deploy is already created
+   or node disconnected
+   */
   initDeploy(jstpLogin, deploy) {
     let credentials = null;
     if (deploy.token) {
@@ -173,6 +191,13 @@ class JSTPServer {
           credentials }, initDeploy);
   }
 
+  /**
+   Start deploy's application
+   @param {string} jstpLogin - local node's login
+   @param {string} deploy.deployId - deploy's identifier
+   @returns {Promise} Promise object which rejects if deploy is already running
+   or node disconnected
+   */
   startApp(jstpLogin, deployId) {
     return this._callProcedure(jstpLogin, deployId, 'startApp');
   }
@@ -185,6 +210,12 @@ class JSTPServer {
     return this._callProcedure(jstpLogin, deployId, 'fetch');
   }
 
+  /**
+   Get status of deployed application
+   @param {string} jstpLogin - local node's login
+   @param {string} deploy.deployId - deploy's identifier
+   @returns {Promise} Promise object with 'lastState' and 'running' fields
+   */
   getDeployStatus(jstpLogin, deployId) {
     return this._callProcedure(jstpLogin, deployId, 'getStatus');
   }
