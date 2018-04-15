@@ -6,7 +6,7 @@ const bodyUnpacker = require('../lib/body-unpacker');
 const root = require('../routes/root');
 const user = require('../routes/user');
 const jwtAuth = require('../lib/jwt-auth');
-
+const errors = require('../lib/error-res');
 
 module.exports = {};
 
@@ -61,6 +61,11 @@ module.exports.init = () => {
         if (req.url.startsWith('/api')) {
             req.url = req.url.substring(4);
         }
-        router.resolveRequest(req.url, req.method, req, res);
+        try {
+            router.resolveRequest(req.url, req.method, req, res);
+        } catch (e) {
+            console.error(e);
+            errors.endServerError(res);
+        }
     }); 
 }

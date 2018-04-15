@@ -57,7 +57,9 @@ UserSchema.pre('save', function(callback) {
     });
   });
 });
-
+/**
+ * BCrypt password check
+ */
 UserSchema.methods.verifyPassword = function(pass, cb) {
   bcrypt.compare(pass, this.password, (err, isMatch) => {
     if (err) {
@@ -67,7 +69,10 @@ UserSchema.methods.verifyPassword = function(pass, cb) {
     cb(null, isMatch);
   });
 };
-
+/**
+ * Generates token
+ * @param extended true=14days, false=12hours token
+ */
 UserSchema.methods.generateJwt = function(extended) {
   const expiry = moment();
   if (!extended) {

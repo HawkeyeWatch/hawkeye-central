@@ -3,7 +3,11 @@
 const User = require('../models/user')
 
 const errors = require('../lib/error-res');
-
+/**
+ * Creates a new user in the database, according to user model
+ * @param {Request} req 
+ * @param {Response} res 
+ */
 function registerUser(req, res) {
     const newUser = JSON.parse(req.body);
     if (!newUser.name || !newUser.password || !newUser.login) {
@@ -23,6 +27,11 @@ function registerUser(req, res) {
         res.end();
     })
 }
+/**
+ * Debugging function, finds user by login, generates a token for him
+ * @param {Request} req 
+ * @param {Response} res 
+ */
 function getUserByLogin(req, res) {
     User.findOne({login: req.match.login}).then(
         r => {
@@ -37,7 +46,12 @@ function getUserByLogin(req, res) {
         }
     )
 }
-
+/**
+ * Checks user login and password, issues a token if all is ok
+ * else ends with a 400, 401 or 404 depending on situation
+ * @param {Request} req 
+ * @param {Response} res 
+ */
 function getToken(req, res) {
     const user = JSON.parse(req.body);
     if (!user.password || !user.login) {
