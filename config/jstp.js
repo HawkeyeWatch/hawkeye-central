@@ -223,6 +223,16 @@ class JSTPServer {
   removeApp(jstpLogin, deployId) {
     return this._callProcedure(jstpLogin, deployId, 'removeApp');
   }
+
+  /**
+   Check if deploy is initialized
+   @param {string} jstpLogin - local node's login
+   @param {string} deploy.deployId - deploy's identifier
+   @returns {Promise} Promise object with boolean - isInitialized
+   */
+  isInitialized(jstpLogin, deployId) {
+    return this._callProcedure(jstpLogin, deployId, 'isInitialized');
+  }
 }
 
 const instance = new JSTPServer();
