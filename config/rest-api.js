@@ -12,28 +12,28 @@ module.exports = {};
 
 function someMiddleware(handler) {
     return (req, res) => {
-        res.write("middlewared ");
+        res.write('middlewared ');
         handler(req, res);
     }
 }
 
 function noRouteHandler(path, method, req, res) {
     res.statusCode = 404;
-    res.statusMessage = "Not Found";
-    res.write("404 Not Found");
+    res.statusMessage = 'Not Found';
+    res.write('404 Not Found');
     res.end();
 }
 
 function noMethodHandler(path, method, req, res) {
     res.statusCode = 405;
-    res.statusMessage = "Method Not Allowed";
-    res.write("405 Method Not Allowed");
+    res.statusMessage = 'Method Not Allowed';
+    res.write('405 Method Not Allowed');
     res.end();
 }
 
 const router = new Router(noRouteHandler, noMethodHandler);
 
-router.assignRoute('GET', '/', jwtAuth(root.get));
+router.assignRoute('GET', '/', root.get);
 router.assignRoute('POST', '/', bodyUnpacker(root.post));
 router.assignRoute(
     'GET',
@@ -41,6 +41,7 @@ router.assignRoute(
     someMiddleware(require('../routes/root'))
 )
 router.assignRoute('POST', '/user', bodyUnpacker(user.post));
+router.assignRoute('POST', '/user/login', bodyUnpacker(user.getToken));
 router.assignRoute('GET', '/user/:login', user.getUserByLogin);
 
 
