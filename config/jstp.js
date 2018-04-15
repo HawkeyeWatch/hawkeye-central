@@ -2,7 +2,7 @@
 
 const jstp = require('metarhia-jstp');
 const config = require('./');
-const localNode = require('../models/localNode');
+const LocalNode = require('../models/localNode');
 
 class JSTPServer {
   constructor() {
@@ -113,7 +113,7 @@ class JSTPServer {
 
     const auth = {
       authenticate: (connection, application, strategy, credentials, cb) => {
-        localNode.findOne({ 'jstpLogin': credentials[0] })
+        LocalNode.findOne({ 'jstpLogin': credentials[0] })
           .then(localNode => {
             if (!localNode) {
               return cb(new Error('not authorized'));
@@ -188,7 +188,7 @@ class JSTPServer {
          url: deploy.url,
          deployId: deploy._id,
          branch: deploy.branch,
-          credentials }, initDeploy);
+          credentials }, 'initDeploy');
   }
 
   /**
