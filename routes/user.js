@@ -1,6 +1,7 @@
 'use strict';
 
 const User = require('../models/user')
+const LocalNode = require('../models/localNode')
 
 const errors = require('../lib/error-res');
 /**
@@ -25,26 +26,7 @@ function registerUser(req, res) {
         res.write(JSON.stringify({success: 'User created.'}));
         console.log(`User created. ${newUser.name} ${newUser.login}`)
         res.end();
-    })
-}
-/**
- * Debugging function, finds user by login, generates a token for him
- * @param {Request} req 
- * @param {Response} res 
- */
-function getUserByLogin(req, res) {
-    User.findOne({login: req.match.login}).then(
-        r => {
-            if (r) {
-                res.write(JSON.stringify({name: r.name, login: r.login, token: r.generateJwt(true)})); 
-                res.end();
-            } else {
-                errors.endNotFound(res);
-            }
-        }, r => {
-            errors.endNotFound(res);
-        }
-    )
+    });
 }
 /**
  * Checks user login and password, issues a token if all is ok
@@ -78,9 +60,21 @@ function getToken(req, res) {
         }
     );
 }
+function getNodes(req, res) {
+    const nodePromises = [];
+    req.user.localNodes.forEach(node => {
+        nodePromises.push(LocalNode.findById(node));
+    });
+    Promise.all(nodePromises).then(
+        objects => {
+            res.write(JSON.stringify(objects));
+            res.end();
+        }
+    )
+}
 
 module.exports = {
-    getUserByLogin,
     post: registerUser,
-    getToken
+    getToken,
+    getNodes
 }

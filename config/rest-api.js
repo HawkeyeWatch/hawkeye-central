@@ -1,12 +1,15 @@
 'use strict';
 
 const http = require('http');
+
 const Router = require('../lib/router');
 const bodyUnpacker = require('../lib/body-unpacker');
-const root = require('../routes/root');
-const user = require('../routes/user');
 const jwtAuth = require('../lib/jwt-auth');
 const errors = require('../lib/error-res');
+
+const root = require('../routes/root');
+const user = require('../routes/user');
+const localNode = require('../routes/local-node');
 
 module.exports = {};
 
@@ -42,7 +45,9 @@ router.assignRoute(
 )
 router.assignRoute('POST', '/user', bodyUnpacker(user.post));
 router.assignRoute('POST', '/user/login', bodyUnpacker(user.getToken));
-router.assignRoute('GET', '/user/:login', user.getUserByLogin);
+router.assignRoute('GET', '/user/nodes', jwtAuth(user.getNodes));
+router.assignRoute('POST', '/node', jwtAuth(bodyUnpacker(localNode.createNode)));
+router.assignRoute('DELETE', '/node', jwtAuth(bodyUnpacker(localNode.deleteNode)));
 
 
 module.exports.init = () => {

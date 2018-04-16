@@ -5,6 +5,7 @@ const moment = require('moment');
 const bcrypt = require('bcrypt-nodejs');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
 const jwt = require('jsonwebtoken');
+
 const config = require('../config');
 
 const UserSchema = new mongoose.Schema({
@@ -27,6 +28,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  localNodes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LocalNode',
+  }],
 });
 
 UserSchema.plugin(beautifyUnique); // For easy duplicate handling
@@ -88,5 +93,10 @@ UserSchema.methods.generateJwt = function(extended) {
     exp: parseInt(expiry.unix())
   }, config.session.secret);
 };
+
+UserSchema.methods.addNode = function(localNode, cb) {
+  this.localNodes.push(localNode._id);
+  this.save(cb);
+}
 
 module.exports = mongoose.model('User', UserSchema);
