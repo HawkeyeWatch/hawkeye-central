@@ -54,10 +54,8 @@ function deleteNode(req, res) {
         node.usersWithAccess.forEach(userId => {
             userPromises.push(User.findById(userId).exec());
         });
-        console.log(userPromises)
         Promise.all(userPromises)
         .then(users => {
-            console.log("Asadasdasd");
             let removePromises = [];
             users.forEach((user) => {
                 if (err) {
@@ -65,15 +63,10 @@ function deleteNode(req, res) {
                 }
                 user.localNodes.remove(nodeId._id);
                 removePromises.push(user.save());
-                console.log("Asadasdasd");
             });
-            console.log("Asadasdasd");
-            console.log(removePromises);
-            console.log("Asadasdasd")
-            Promise.all(removePromises, () => {
-                console.log("Asadasdasd")
+            Promise.all(removePromises)
+            .then(() => {
                 LocalNode.findByIdAndRemove(nodeId._id, (err) => {
-                    console.log("Asadasdasd")
                     res.write(JSON.stringify({success: 'Node deleted'}));
                     res.end();
                 });
