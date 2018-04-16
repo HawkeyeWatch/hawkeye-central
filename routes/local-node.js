@@ -47,27 +47,40 @@ function deleteNode(req, res) {
         return errors.endBadRequest(res, "No id");
     }
     LocalNode.findById(nodeId._id, (err, node) => {
-        if (err || node.deploys.length > 0) {
+        if (err || !node || node.deploys.length > 0) {
             return errors.endBadRequest(res, "Node has deploys or is already deleted");
         }
         const userPromises = [];
         node.usersWithAccess.forEach(userId => {
-            User.findById(userId, (err, user) => {
+            userPromises.push(User.findById(userId).exec());
+        });
+        console.log(userPromises)
+        Promise.all(userPromises)
+        .then(users => {
+            console.log("Asadasdasd");
+            let removePromises = [];
+            users.forEach((user) => {
                 if (err) {
                     return errors.endServerError(res);
                 }
-                console.log(user.localNodes);
-                user.localNodes.splice(user.localNodes.findIndex(el => el === nodeId._id), 1);
-                console.log(user.localNodes);
-                userPromises.push(user.save());
-            })
+                user.localNodes.remove(nodeId._id);
+                removePromises.push(user.save());
+                console.log("Asadasdasd");
+            });
+            console.log("Asadasdasd");
+            console.log(removePromises);
+            console.log("Asadasdasd")
+            Promise.all(removePromises, () => {
+                console.log("Asadasdasd")
+                LocalNode.findByIdAndRemove(nodeId._id, (err) => {
+                    console.log("Asadasdasd")
+                    res.write(JSON.stringify({success: 'Node deleted'}));
+                    res.end();
+                });
+            }, () => {
+                return errors.endServerError(res);
+            });
         });
-        Promise.all(userPromises)
-        .then(
-            () => LocalNode.findByIdAndRemove(nodeId._id, (err, res) => {
-                res.write(JSON.stringify({success: 'Node deleted'}));
-            })
-        )
     });
 }
 
