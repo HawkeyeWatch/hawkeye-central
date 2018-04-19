@@ -2,6 +2,7 @@
 
 const User = require('../models/user')
 const LocalNode = require('../models/localNode')
+const jstpServer = require('../config/jstp');
 
 const errors = require('../lib/error-res');
 /**
@@ -67,14 +68,64 @@ function getNodes(req, res) {
     });
     Promise.all(nodePromises).then(
         objects => {
-            res.write(JSON.stringify(objects));
+            res.write(JSON.stringify(objects.map(node => ({
+                _id: node._id,
+                title: node.title,
+                jstpLogin: node.jstpLogin,
+                deploys: node.deploys.map(deploy => ({
+                    _id: deploy._id,
+                    title: deploy.title,
+                    repo: deploy.repo,
+                    branch: deploy.branch,
+                })),
+                isConnected: jstpServer.isNodeConnected(node.jstpLogin),
+            }))));
             res.end();
         }
     )
+}
+function addNode(req, res) {
+    const nodeId = JSON.parse(req.body);
+    if (!nodeId || !nodeId.jstpLogin || !nodeId.jstpPassword) {
+        return errors.endBadRequest(res, "Not enogh info");
+    }
+    LocalNode.findOne({jstpLogin: nodeId.jstpLogin}, (err, node) => {
+        if (err) {
+            return errors.endServerError(res);
+        }
+        if (!node) {
+            return errors.endNotFound(res);
+        }
+        node.verifyPassword(nodeId.jstpPassword, (err, match) => {
+            if (err) {
+                return errors.endServerError(res);
+            }
+            if (match) {
+                req.user.localNodes.push(node._id);
+                req.user.save(() => {
+                    node.usersWithAccess.push(req.user._id);
+                    node.save(() => {
+                        res.write(JSON.stringify({success: "Node added"}));
+                        res.end();
+                    })
+                })
+                return;
+                Promise.all([req.user.save(), node.save()])
+                .then(() => {
+                    res.write(JSON.stringify({success: "Node added"}));
+                    res.end();
+                }, () => res.endServerError(res));
+            } else {
+                res.write(JSON.stringify({error: "Password not correct"}));
+                res.end();
+            }
+        });
+    });
 }
 
 module.exports = {
     post: registerUser,
     getToken,
-    getNodes
+    getNodes,
+    addNode
 }

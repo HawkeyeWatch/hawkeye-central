@@ -46,8 +46,11 @@ router.assignRoute(
 router.assignRoute('POST', '/user', bodyUnpacker(user.post));
 router.assignRoute('POST', '/user/login', bodyUnpacker(user.getToken));
 router.assignRoute('GET', '/user/nodes', jwtAuth(user.getNodes));
+router.assignRoute('POST', '/user/addnode', jwtAuth(bodyUnpacker(user.addNode)));
+
 router.assignRoute('POST', '/node', jwtAuth(bodyUnpacker(localNode.createNode)));
-router.assignRoute('DELETE', '/node', jwtAuth(bodyUnpacker(localNode.deleteNode)));
+router.assignRoute('DELETE', '/node/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
+router.assignRoute('DELETE', '/user/addnode', jwtAuth(bodyUnpacker(localNode.deleteNode)));
 
 
 module.exports.init = () => {

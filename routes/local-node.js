@@ -9,9 +9,14 @@ const errors = require('../lib/error-res');
 
 function createNode(req, res) {
     const newNode = JSON.parse(req.body);
-    if (!newNode.title) {
+    if (!newNode || !newNode.title) {
         errors.endBadRequest(res, 'Not enough info.');
         console.log('Not enough info');
+        return;
+    }
+    if (newNode.title.length < 4) {
+        res.write(JSON.stringify({error: "Minimal length is 4"}));
+        res.end();
         return;
     }
     LocalNode.generateUniqueLogin((err, result) => {
@@ -35,17 +40,18 @@ function createNode(req, res) {
                     return;
                 }
                 res.write(JSON.stringify({success: 'Node created.', node: newNode}));
-                console.log(`User created. ${newNode.title} for ${req.user.login}`)
+                console.log(`Node created. ${newNode.title} for ${req.user.login}`)
                 res.end();
             })
         });
     });
 }
 function deleteNode(req, res) {
-    const nodeId = JSON.parse(req.body);
-    if (!nodeId || !nodeId._id) {
+    if (!req.match || !req.match.id) {
         return errors.endBadRequest(res, "No id");
     }
+    const nodeId = {_id: req.match.id};
+
     LocalNode.findById(nodeId._id, (err, node) => {
         if (err || !node || node.deploys.length > 0) {
             return errors.endBadRequest(res, "Node has deploys or is already deleted");
@@ -56,7 +62,7 @@ function deleteNode(req, res) {
         });
         Promise.all(userPromises)
         .then(users => {
-            let removePromises = [];
+            const removePromises = [];
             users.forEach((user) => {
                 if (err) {
                     return errors.endServerError(res);

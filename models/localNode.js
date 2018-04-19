@@ -88,6 +88,7 @@ LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
     return cb(null, isMatch);
   });
 };
+
 function generateUniqueLogin(cb) {
   const login = rand.generate(8);
   this.findOne({login}, (err, res) => {
