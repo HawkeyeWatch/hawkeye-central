@@ -79,6 +79,36 @@ LocalNodeSchema.pre('save', function(callback) {
   });
 });
 
+mongoose.model('Deploy', DeploySchema);
+
+
+/**
+ Creates deploy and associates it with local node document.
+ @param {string} repo - Git repo url
+ @param {string} [branch] - git repo branch
+ @param {string} title - deploy's title
+ @param {string} [token] - git oauth token for private repos
+ @param {Function} cb - errback
+ @param {JSTPServer} jstp - jstp server instance (cannot be used via import)
+ because of circular import :( 
+  */
+LocalNodeSchema.methods.createDeploy = function(repo, branch, title, token, cb, jstp) {
+  const Deploy = mongoose.model('Deploy');
+  const newDeploy = new Deploy({ repo, branch, title, token });
+  return newDeploy.save()
+    .then(deploy => jstp.initDeploy(this.jstpLogin,
+     { url: repo, _id: deploy._id.toString(), branch, token }))
+    .then(() => {
+      this.deploys.push(newDeploy);
+      return this.save();
+    })
+    .then(() => cb(null, newDeploy))
+    .catch(err => {
+      newDeploy.remove();
+      return cb(err);
+    });
+}
+
 LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
   bcrypt.compare(pass, this.jstpPassword, (err, isMatch) => {
     if (err) {
@@ -105,6 +135,5 @@ function generateUniqueLogin(cb) {
 
 LocalNodeSchema.statics.generateUniqueLogin = generateUniqueLogin;
 
-mongoose.model('Deploy', DeploySchema);
 
 module.exports = mongoose.model('LocalNode', LocalNodeSchema);
