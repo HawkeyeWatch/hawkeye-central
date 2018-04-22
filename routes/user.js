@@ -96,6 +96,10 @@ function addNode(req, res) {
         if (!node) {
             return errors.endNotFound(res);
         }
+        if(req.user.localNodes.find(i => i == node._id)) {
+            res.write(JSON.stringify({error: "You already have this node."}));
+            return res.end();
+        }
         node.verifyPassword(nodeId.jstpPassword, (err, match) => {
             if (err) {
                 return errors.endServerError(res);
@@ -105,16 +109,25 @@ function addNode(req, res) {
                 req.user.save(() => {
                     node.usersWithAccess.push(req.user._id);
                     node.save(() => {
-                        res.write(JSON.stringify({success: "Node added"}));
+                        res.write(JSON.stringify({
+                            success: "Node added",
+                            node: {
+                                _id: node._id,
+                                title: node.title,
+                                jstpLogin: node.jstpLogin,
+                                deploys: node.deploys.map(deploy => ({
+                                    _id: deploy._id,
+                                    title: deploy.title,
+                                    repo: deploy.repo,
+                                    branch: deploy.branch,
+                                })),
+                                isConnected: jstpServer.isNodeConnected(node.jstpLogin),
+                            }
+                        }));
                         res.end();
                     })
                 })
                 return;
-                Promise.all([req.user.save(), node.save()])
-                .then(() => {
-                    res.write(JSON.stringify({success: "Node added"}));
-                    res.end();
-                }, () => res.endServerError(res));
             } else {
                 res.write(JSON.stringify({error: "Password not correct"}));
                 res.end();

@@ -50,8 +50,6 @@ router.assignRoute('POST', '/user/addnode', jwtAuth(bodyUnpacker(user.addNode)))
 
 router.assignRoute('POST', '/node', jwtAuth(bodyUnpacker(localNode.createNode)));
 router.assignRoute('DELETE', '/node/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
-router.assignRoute('DELETE', '/user/addnode', jwtAuth(bodyUnpacker(localNode.deleteNode)));
-
 
 module.exports.init = () => {
     return http.createServer(function (req, res) {
