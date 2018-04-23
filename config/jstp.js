@@ -157,7 +157,7 @@ class JSTPServer {
       if (this.isNodeConnected(jstpLogin)) {
         this._nodes.get(jstpLogin)[procedure](deployId, (err, ...args) => {
           if (err) {
-            return reject(err);
+            return reject(JSON.parse(err.message));
           }
           return resolve(args);
         });
