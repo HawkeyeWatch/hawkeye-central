@@ -49,7 +49,13 @@ router.assignRoute('GET', '/user/nodes', jwtAuth(user.getNodes));
 router.assignRoute('POST', '/user/addnode', jwtAuth(bodyUnpacker(user.addNode)));
 
 router.assignRoute('POST', '/node', jwtAuth(bodyUnpacker(localNode.createNode)));
-router.assignRoute('DELETE', '/node/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
+router.assignRoute('POST', '/node/deploy', jwtAuth(bodyUnpacker(localNode.createDeploy)));
+router.assignRoute('POST', '/node/deploy/delete', jwtAuth(bodyUnpacker(localNode.deleteDeploy)));
+router.assignRoute('POST', '/node/deploy/get', jwtAuth(bodyUnpacker(localNode.getDeploy)));
+router.assignRoute('POST', '/node/deploy/start', jwtAuth(bodyUnpacker(localNode.startDeploy)));
+router.assignRoute('POST', '/node/deploy/stop', jwtAuth(bodyUnpacker(localNode.stopDeploy)));
+router.assignRoute('POST', '/node/deploy/fetch', jwtAuth(bodyUnpacker(localNode.fetchDeploy)));
+router.assignRoute('DELETE', '/node/delete/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
 
 module.exports.init = () => {
     return http.createServer(function (req, res) {
