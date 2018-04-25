@@ -57,27 +57,31 @@ router.assignRoute('POST', '/node/deploy/stop', jwtAuth(bodyUnpacker(localNode.s
 router.assignRoute('POST', '/node/deploy/fetch', jwtAuth(bodyUnpacker(localNode.fetchDeploy)));
 router.assignRoute('DELETE', '/node/delete/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
 
-module.exports.init = () => {
-    return http.createServer(function (req, res) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, HEAD");
-        if (req.method == 'OPTIONS') {
-            res.end();
-            return;
-        }
-        res.setHeader('Content-Type', 'application/json');
+const server = function (req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, HEAD");
+    if (req.method == 'OPTIONS') {
+        res.end();
+        return;
+    }
+    res.setHeader('Content-Type', 'application/json');
 
 
-        if (req.url.startsWith('/api')) {
-            req.url = req.url.substring(4);
-        }
-        try {
-            router.resolveRequest(req.url, req.method, req, res);
-        } catch (e) {
-            console.error(e);
-            errors.endServerError(res);
-        }
-    }); 
+    if (req.url.startsWith('/api')) {
+        req.url = req.url.substring(4);
+    }
+    try {
+        router.resolveRequest(req.url, req.method, req, res);
+    } catch (e) {
+        console.error(e);
+        errors.endServerError(res);
+    }
+}
+
+module.exports.init = (cb) => {
+    cb(null, http.createServer(
+        server
+    ));
 }
