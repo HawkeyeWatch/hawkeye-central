@@ -214,7 +214,8 @@ class JSTPServer {
    Get status of deployed application
    @param {string} jstpLogin - local node's login
    @param {string} deploy.deployId - deploy's identifier
-   @returns {Promise} Promise object with 'lastState' and 'running' fields
+   @returns {Promise} Promise object with 'lastState', 'running' and
+    'lastDeployLog' fields
    */
   getDeployStatus(jstpLogin, deployId) {
     return this._callProcedure(jstpLogin, deployId, 'getStatus');
