@@ -58,6 +58,9 @@ function deleteNode(req, res) {
         if (err || !node || node.deploys.length > 0) {
             return errors.endBadRequest(res, "Node has deploys or is already deleted");
         }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
+        }
         const userPromises = [];
         node.usersWithAccess.forEach(userId => {
             userPromises.push(User.findById(userId).exec());
@@ -87,12 +90,18 @@ function deleteNode(req, res) {
 
 function createDeploy(req, res) {
     const {nodeId, deploy} = JSON.parse(req.body);
-    if (!nodeId || !deploy || !deploy.repo || !deploy.branch || !deploy.title) {
+    if (!nodeId || !deploy || !deploy.repo || !deploy.title) {
         return errors.endBadRequest(res, 'Not enough data');
+    }
+    if (!deploy.branch) {
+        deploy.branch == 'master';
     }
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
+        }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
@@ -103,7 +112,6 @@ function createDeploy(req, res) {
             if (err) {
                 return errors.endBadRequest(res, err);
             }
-            deploy.status = jstpServer.getDeployStatus(node.jstpLogin, deploy._id);
             res.write(JSON.stringify({success: "Deploy created.", deploy}));
             res.end();
         }, jstpServer);
@@ -117,6 +125,9 @@ function deleteDeploy(req, res) {
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
+        }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
@@ -142,6 +153,9 @@ function getDeploy(req, res) {
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
+        }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
@@ -173,6 +187,9 @@ function stopDeploy(req, res) {
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
+        }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
@@ -211,6 +228,9 @@ function startDeploy(req, res) {
         if (err) {
             return errors.endServerError(res);
         }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
+        }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
             return res.end();
@@ -246,6 +266,9 @@ function fetchDeploy(req, res) {
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
+        }
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+            return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
             res.write(JSON.stringify({error: 'Node is not connected.'}));
