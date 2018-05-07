@@ -57,6 +57,8 @@ router.assignRoute('POST', '/node/deploy/stop', jwtAuth(bodyUnpacker(localNode.s
 router.assignRoute('POST', '/node/deploy/fetch', jwtAuth(bodyUnpacker(localNode.fetchDeploy)));
 router.assignRoute('DELETE', '/node/delete/:id', jwtAuth(bodyUnpacker(localNode.deleteNode)));
 
+router.assignRoute('POST', '/webhooks', bodyUnpacker(localNode.webhooks));
+
 const server = function (req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");

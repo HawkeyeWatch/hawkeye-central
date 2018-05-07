@@ -6,6 +6,7 @@ const LocalNode = require('../models/localNode');
 const User = require('../models/user');
 
 const jstpServer = require('../config/jstp');
+const cipher = require('../lib/cipher')
 
 const errors = require('../lib/error-res');
 
@@ -96,6 +97,7 @@ function createDeploy(req, res) {
     if (!deploy.branch) {
         deploy.branch == 'master';
     }
+    deploy.webhookSecret = cipher.encrypt(deploy.repo);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
             return errors.endServerError(res);
@@ -108,7 +110,7 @@ function createDeploy(req, res) {
             console.log(jstpServer.isNodeConnected(node.jstpLogin))
             return res.end();
         }
-        node.createDeploy(deploy.repo, deploy.branch, deploy.title, deploy.token, (err, deploy) => {
+        node.createDeploy(deploy.repo, deploy.branch, deploy.title, deploy.token, deploy.webhookSecret, (err, deploy) => {
             if (err) {
                 return errors.endBadRequest(res, err);
             }
@@ -300,6 +302,32 @@ function fetchDeploy(req, res) {
             });
     });
 }
+function webhooks(req, res) {
+    const token = req.headers['x-hub-signature'] || req.headers['x-gitlab-token'];
+    if (!token) {
+        return errors.endUnauthorised(res);
+    }
+    const repoUrl = cipher.decrypt(token);
+    LocalNode.find({"deploys.repo": repoUrl})
+    .then(nodes => {
+        console.log(nodes);
+        const fetchPromises = [];
+        nodes.forEach(node => {
+            node.deploys.forEach(deploy => {
+                if (deploy.repo === repoUrl) {
+                    fetchPromises.push(jstpServer.fetchDeploy(node.jstpLogin, deploy._id));
+                }
+            })
+        });
+        Promise.all(fetchPromises)
+        .then(
+            good => (res.write(JSON.stringify({success: true})), res.end()),
+            err => (errors.endServerError(res), console.log(err))
+        );
+    }, err => {
+        return errors.endServerError();
+    });
+}
 
 module.exports = {
     createNode,
@@ -309,5 +337,6 @@ module.exports = {
     getDeploy,
     startDeploy,
     stopDeploy,
-    fetchDeploy
+    fetchDeploy,
+    webhooks
 }

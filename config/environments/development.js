@@ -6,7 +6,8 @@ module.exports = {
     uri: 'mongodb://localhost/central-watcher'
   },
   session: {
-    secret: 'verysecretmagicwords'
+    secret: 'verysecretmagicwords',
+    cipherPass: '123123123' // make this as long as it can possibly be.
   },
   jstpPort: 3228,
 };

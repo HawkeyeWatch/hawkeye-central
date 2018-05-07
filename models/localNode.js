@@ -25,6 +25,10 @@ const DeploySchema = new mongoose.Schema({
     // Oauth token for private repos
     type: String,
   },
+  webhookSecret: {
+    type: String,
+    required: true,
+  }
 });
 
 const LocalNodeSchema = new mongoose.Schema({
@@ -92,9 +96,9 @@ mongoose.model('Deploy', DeploySchema);
  @param {JSTPServer} jstp - jstp server instance (cannot be used via import)
  because of circular import :( 
   */
-LocalNodeSchema.methods.createDeploy = function(repo, branch, title, token, cb, jstp) {
+LocalNodeSchema.methods.createDeploy = function(repo, branch, title, token, webhookSecret, cb, jstp) {
   const Deploy = mongoose.model('Deploy');
-  const newDeploy = new Deploy({ repo, branch, title, token });
+  const newDeploy = new Deploy({ repo, branch, title, token, webhookSecret});
   return newDeploy.save()
     .then(deploy => jstp.initDeploy(this.jstpLogin,
      { url: repo, _id: deploy._id.toString(), branch, token }))
