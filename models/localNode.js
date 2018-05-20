@@ -1,7 +1,6 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt-nodejs');
 const rand = require('rand-token');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
@@ -94,14 +93,22 @@ mongoose.model('Deploy', DeploySchema);
  @param {string} [token] - git oauth token for private repos
  @param {Function} cb - errback
  @param {JSTPServer} jstp - jstp server instance (cannot be used via import)
- because of circular import :( 
+ because of circular import :(
   */
-LocalNodeSchema.methods.createDeploy = function(repo, branch, title, token, webhookSecret, cb, jstp) {
+LocalNodeSchema.methods.createDeploy = function(
+  repo,
+  branch,
+  title,
+  token,
+  webhookSecret,
+  cb,
+  jstp
+) {
   const Deploy = mongoose.model('Deploy');
-  const newDeploy = new Deploy({ repo, branch, title, token, webhookSecret});
+  const newDeploy = new Deploy({ repo, branch, title, token, webhookSecret });
   return newDeploy.save()
     .then(deploy => jstp.initDeploy(this.jstpLogin,
-     { url: repo, _id: deploy._id.toString(), branch, token }))
+      { url: repo, _id: deploy._id.toString(), branch, token }))
     .then(() => {
       this.deploys.push(newDeploy);
       return this.save();
@@ -111,7 +118,7 @@ LocalNodeSchema.methods.createDeploy = function(repo, branch, title, token, webh
       newDeploy.remove();
       return cb(err);
     });
-}
+};
 
 LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
   bcrypt.compare(pass, this.jstpPassword, (err, isMatch) => {
@@ -125,15 +132,15 @@ LocalNodeSchema.methods.verifyPassword = function(pass, cb) {
 
 function generateUniqueLogin(cb) {
   const login = rand.generate(8);
-  this.findOne({login}, (err, res) => {
-      if (err) {
-        return cb(err);
-          
-      }
-      if (res) {
-        return generateUniqueLogin(cb);
-      }
-      cb(null, login);
+  this.findOne({ login }, (err, res) => {
+    if (err) {
+      return cb(err);
+
+    }
+    if (res) {
+      return generateUniqueLogin(cb);
+    }
+    cb(null, login);
   });
 }
 

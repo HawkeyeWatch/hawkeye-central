@@ -100,6 +100,6 @@ UserSchema.methods.generateJwt = function(extended) {
 UserSchema.methods.addNode = function(localNode, cb) {
   this.localNodes.push(localNode._id);
   this.save(cb);
-}
+};
 
 module.exports = mongoose.model('User', UserSchema);
