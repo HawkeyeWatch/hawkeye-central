@@ -32,6 +32,9 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'LocalNode',
   }],
+  isAdmin: {
+    type: Boolean
+  }
 });
 
 UserSchema.plugin(beautifyUnique); // For easy duplicate handling

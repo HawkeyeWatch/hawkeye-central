@@ -24,7 +24,7 @@ function createNode(req, res) {
     }
     LocalNode.generateUniqueLogin((err, result) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
         newNode.jstpLogin = result;
         newNode.jstpPassword = rand.generate(8);
@@ -33,13 +33,11 @@ function createNode(req, res) {
         n.save((error) => {
             if (error) {
                 errors.endBadRequest(res, error.message);
-                console.log(error.message);
                 return;
             }
             req.user.addNode(n, (err) => {
                 if (error) {
                     errors.endBadRequest(res, error.message);
-                    console.log(error.message);
                     return;
                 }
                 res.write(JSON.stringify({success: 'Node created.', node: newNode}));
@@ -59,7 +57,7 @@ function deleteNode(req, res) {
         if (err || !node || node.deploys.length > 0) {
             return errors.endBadRequest(res, "Node has deploys or is already deleted");
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         const userPromises = [];
@@ -71,7 +69,7 @@ function deleteNode(req, res) {
             const removePromises = [];
             users.forEach((user) => {
                 if (err) {
-                    return errors.endServerError(res);
+                    return errors.endServerError(res, err);
                 }
                 user.localNodes.remove(nodeId._id);
                 removePromises.push(user.save());
@@ -82,8 +80,8 @@ function deleteNode(req, res) {
                     res.write(JSON.stringify({success: 'Node deleted'}));
                     res.end();
                 });
-            }, () => {
-                return errors.endServerError(res);
+            }, (err) => {
+                return errors.endServerError(res, err);
             });
         });
     });
@@ -100,9 +98,9 @@ function createDeploy(req, res) {
     deploy.webhookSecret = cipher.encrypt(deploy.repo);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -126,9 +124,9 @@ function deleteDeploy(req, res) {
     }
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -145,8 +143,7 @@ function deleteDeploy(req, res) {
                 res.write(JSON.stringify({success: "Deploy deleted."}));
                 res.end();
             }, (err) => {
-                console.error(err);
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             });
     });
 };
@@ -154,9 +151,9 @@ function getDeploy(req, res) {
     const {nodeId, deployId} = JSON.parse(req.body);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -174,12 +171,12 @@ function getDeploy(req, res) {
                     title: deploy.title,
                     repo: deploy.repo,
                     branch: deploy.branch,
+                    webhookSecret: deploy.webhookSecret,
                     status
                 }));
                 res.end();
             }, (err) => {
-                console.log(err);
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             });
     });
 }
@@ -188,9 +185,9 @@ function stopDeploy(req, res) {
     const {nodeId, deployId} = JSON.parse(req.body);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -214,12 +211,10 @@ function stopDeploy(req, res) {
                         }));
                         res.end();
                     }, (err)=> {
-                        console.log(err);
-                        return errors.endServerError(res);
+                        return errors.endServerError(res, err);
                     });
             }, (err)=> {
-                console.log(err);
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             });
     });
 }
@@ -228,9 +223,9 @@ function startDeploy(req, res) {
     const {nodeId, deployId} = JSON.parse(req.body);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -254,12 +249,10 @@ function startDeploy(req, res) {
                         }));
                         res.end();
                     }, (err)=> {
-                        console.log(err);
-                        return errors.endServerError(res);
+                        return errors.endServerError(res, err);
                     });
             }, (err)=> {
-                console.log(err);
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             });
     });
 }
@@ -267,9 +260,9 @@ function fetchDeploy(req, res) {
     const {nodeId, deployId} = JSON.parse(req.body);
     LocalNode.findById(nodeId, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
-        if (!node.usersWithAccess.some(user => user.equals(req.user._id))) {
+        if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req,user.isAdmin) {
             return errors.endBadRequest(res, "You can't");
         }
         if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -293,12 +286,10 @@ function fetchDeploy(req, res) {
                         }));
                         res.end();
                     }, (err)=> {
-                        console.log(err);
-                        return errors.endServerError(res);
+                        return errors.endServerError(res, err);
                     });
             }, (err)=> {
-                console.log(err);
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             });
     });
 }
@@ -310,22 +301,21 @@ function webhooks(req, res) {
     const repoUrl = cipher.decrypt(token);
     LocalNode.find({"deploys.repo": repoUrl})
     .then(nodes => {
-        console.log(nodes);
         const fetchPromises = [];
         nodes.forEach(node => {
             node.deploys.forEach(deploy => {
                 if (deploy.repo === repoUrl) {
-                    fetchPromises.push(jstpServer.fetchDeploy(node.jstpLogin, deploy._id));
+                    fetchPromises.push(jstpServer.fetchDeploy(node.jstpLogin, deploy._id.toString()));
                 }
             })
         });
         Promise.all(fetchPromises)
         .then(
             good => (res.write(JSON.stringify({success: true})), res.end()),
-            err => (errors.endServerError(res), console.log(err))
+            err => (errors.endServerError(res, err))
         );
     }, err => {
-        return errors.endServerError();
+        return errors.endServerError(res, err);
     });
 }
 

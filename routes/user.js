@@ -14,20 +14,28 @@ function registerUser(req, res) {
     const newUser = JSON.parse(req.body);
     if (!newUser.name || !newUser.password || !newUser.login) {
         errors.endBadRequest(res, 'Not enough info.');
-        console.log('Not enough info');
         return;
     }
     const u = new User(newUser);
-    u.save((error) => {
-        if (error) {
-            errors.endBadRequest(res, error.message);
-            console.log(error.message);
-            return;
+    User.count({}, (err, c) => {
+        if (err) {
+            errors.endBadRequest(res);
         }
-        res.write(JSON.stringify({success: 'User created.'}));
-        console.log(`User created. ${newUser.name} ${newUser.login}`)
-        res.end();
-    });
+        if (c === 0) {
+            u.isAdmin = true;
+        } else {
+            u.isAdmin = false;
+        }
+        u.save((error) => {
+            if (error) {
+                errors.endBadRequest(res, error.message);
+                return;
+            }
+            res.write(JSON.stringify({success: 'User created.'}));
+            console.log(`User created. ${newUser.name} ${newUser.login}`)
+            res.end();
+        });
+    })
 }
 /**
  * Checks user login and password, issues a token if all is ok
@@ -39,7 +47,6 @@ function getToken(req, res) {
     const user = JSON.parse(req.body);
     if (!user.password || !user.login) {
         errors.endBadRequest(res, 'Not enough info.');
-        console.log('Not enough info');
         return;
     }
     User.findOne({login: user.login}).then(
@@ -48,10 +55,9 @@ function getToken(req, res) {
                 r.verifyPassword(user.password, (err, match) => {
                     if (err || !match) {
                         errors.endUnauthorised(res);
-                        console.log('Login', err, match);
                         return;
                     }
-                    res.write(JSON.stringify({name: r.name, login: r.login, token: r.generateJwt(user.extended)}));
+                    res.write(JSON.stringify({name: r.name, login: r.login, token: r.generateJwt(user.extended), isAdmin: r.isAdmin}));
                     console.log('Login succesful');
                     res.end();
                 })
@@ -62,6 +68,24 @@ function getToken(req, res) {
     );
 }
 function getNodes(req, res) {
+    if (req.user.isAdmin) {
+        LocalNode.find({}, (err, objects) => {
+            res.write(JSON.stringify(objects.map(node => ({
+                _id: node._id,
+                title: node.title,
+                jstpLogin: node.jstpLogin,
+                deploys: node.deploys.map(deploy => ({
+                    _id: deploy._id,
+                    title: deploy.title,
+                    repo: deploy.repo,
+                    branch: deploy.branch,
+                })),
+                isConnected: jstpServer.isNodeConnected(node.jstpLogin),
+            }))));
+            res.end();
+        });
+        return;
+    }
     const nodePromises = [];
     req.user.localNodes.forEach(node => {
         nodePromises.push(LocalNode.findById(node));
@@ -91,7 +115,7 @@ function addNode(req, res) {
     }
     LocalNode.findOne({jstpLogin: nodeId.jstpLogin}, (err, node) => {
         if (err) {
-            return errors.endServerError(res);
+            return errors.endServerError(res, err);
         }
         if (!node) {
             return errors.endNotFound(res);
@@ -102,7 +126,7 @@ function addNode(req, res) {
         }
         node.verifyPassword(nodeId.jstpPassword, (err, match) => {
             if (err) {
-                return errors.endServerError(res);
+                return errors.endServerError(res, err);
             }
             if (match) {
                 req.user.localNodes.push(node._id);
@@ -120,6 +144,7 @@ function addNode(req, res) {
                                     title: deploy.title,
                                     repo: deploy.repo,
                                     branch: deploy.branch,
+                                    webhookSecret: deploy.webhookSecret
                                 })),
                                 isConnected: jstpServer.isNodeConnected(node.jstpLogin),
                             }
@@ -136,9 +161,46 @@ function addNode(req, res) {
     });
 }
 
+function getUsers(req, res) {
+    if (!req.user.isAdmin) {
+        return errors.endUnauthorised(res);
+    }
+    User.find({}, (err, users) => {
+        if (err) {
+            return errors.endServerError(res, err);
+        }
+        res.write(JSON.stringify(
+            users.map(r => ({
+                name: r.name,
+                login: r.login,
+                isAdmin: r.isAdmin,
+                _id: r._id
+            }))
+        ));
+        res.end();
+    });
+}
+function changeUserStatus(req, res) {
+    if (!req.user.isAdmin) {
+        return errors.endUnauthorised(res);
+    }
+    const b = JSON.parse(req.body);
+    if (!b.userId) {
+        return errors.endBadRequest(res, "No id provided");
+    }
+    User.findByIdAndUpdate(b.userId, {isAdmin: true}, (err, r) => {
+        if (err) {
+            return errors.endServerError(res, err);
+        }
+        res.write(JSON.stringify({success: true}))
+    });
+}
+
 module.exports = {
     post: registerUser,
     getToken,
     getNodes,
-    addNode
+    addNode,
+    getUsers,
+    changeUserStatus
 }

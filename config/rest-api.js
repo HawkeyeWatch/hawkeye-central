@@ -77,8 +77,7 @@ const server = function (req, res) {
     try {
         router.resolveRequest(req.url, req.method, req, res);
     } catch (e) {
-        console.error(e);
-        errors.endServerError(res);
+        errors.endServerError(res, e);
     }
 }
 
