@@ -2,7 +2,7 @@
 
 const User = require('../models/user')
 const LocalNode = require('../models/localNode')
-const jstpServer = require('../config/jstp');
+const jstpServer = require('../lib/jstp');
 
 const errors = require('../lib/error-res');
 /**

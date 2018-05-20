@@ -5,7 +5,7 @@ const rand = require('rand-token');
 const LocalNode = require('../models/localNode');
 const User = require('../models/user');
 
-const jstpServer = require('../config/jstp');
+const jstpServer = require('../lib/jstp');
 
 const errors = require('../lib/error-res');
 

@@ -62,6 +62,7 @@ UserSchema.pre('save', function(callback) {
     });
   });
 });
+
 /**
  * BCrypt password check
  */
@@ -74,6 +75,7 @@ UserSchema.methods.verifyPassword = function(pass, cb) {
     cb(null, isMatch);
   });
 };
+
 /**
  * Generates token
  * @param extended true=14days, false=12hours token
@@ -97,6 +99,6 @@ UserSchema.methods.generateJwt = function(extended) {
 UserSchema.methods.addNode = function(localNode, cb) {
   this.localNodes.push(localNode._id);
   this.save(cb);
-}
+};
 
 module.exports = mongoose.model('User', UserSchema);
