@@ -49,6 +49,11 @@ router.assignRoute(
   bodyUnpacker(user.post)
 );
 router.assignRoute(
+  'GET',
+  '/user',
+  jwtAuth(user.getUser)
+);
+router.assignRoute(
   'POST',
   '/user/login',
   bodyUnpacker(user.getToken)
@@ -62,6 +67,26 @@ router.assignRoute(
   'POST',
   '/user/addnode',
   jwtAuth(bodyUnpacker(user.addNode))
+);
+router.assignRoute(
+  'GET',
+  '/user/all',
+  jwtAuth(user.getUsers)
+);
+router.assignRoute(
+  'POST',
+  '/user/promote',
+  jwtAuth(bodyUnpacker(user.changeUserStatus))
+);
+router.assignRoute(
+  'POST',
+  '/user/togglereg',
+  jwtAuth(user.toggleRegistration)
+);
+router.assignRoute(
+  'GET',
+  '/user/regallowed',
+  user.registrationAllowed
 );
 
 router.assignRoute(
