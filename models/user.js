@@ -65,6 +65,7 @@ UserSchema.pre('save', function(callback) {
     });
   });
 });
+
 /**
  * BCrypt password check
  */
@@ -77,6 +78,7 @@ UserSchema.methods.verifyPassword = function(pass, cb) {
     cb(null, isMatch);
   });
 };
+
 /**
  * Generates token
  * @param extended true=14days, false=12hours token

@@ -1,11 +1,12 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 const bcrypt = require('bcrypt-nodejs');
 const rand = require('rand-token');
 const beautifyUnique = require('mongoose-beautiful-unique-validation');
 
-const DeploySchema = new mongoose.Schema({
+const DeploySchema = new Schema({
   repo: {
     type: String,
     required: true,
@@ -30,7 +31,7 @@ const DeploySchema = new mongoose.Schema({
   }
 });
 
-const LocalNodeSchema = new mongoose.Schema({
+const LocalNodeSchema = new Schema({
   title: {
     type: String,
     required: true,
@@ -48,7 +49,7 @@ const LocalNodeSchema = new mongoose.Schema({
     required: true,
   },
   usersWithAccess: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
   }]
 });
