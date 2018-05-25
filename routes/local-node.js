@@ -10,8 +10,8 @@ const cipher = require('../lib/cipher');
 
 const errors = require('../lib/error-res');
 
-function createNode(req, res) {
-  const newNode = JSON.parse(req.body);
+function createNode({ req, res, body, user }) {
+  const newNode = JSON.parse(body);
   if (!newNode || !newNode.title) {
     errors.endBadRequest(res, 'Not enough info.');
     console.log('Not enough info');
@@ -28,30 +28,30 @@ function createNode(req, res) {
     }
     newNode.jstpLogin = result;
     newNode.jstpPassword = rand.generate(8);
-    newNode.usersWithAccess = [req.user._id];
+    newNode.usersWithAccess = [user._id];
     const n = new LocalNode(newNode);
     n.save((error) => {
       if (error) {
         errors.endBadRequest(res, error.message);
         return;
       }
-      req.user.addNode(n, (err) => {
+      user.addNode(n, (err) => {
         if (err) {
           errors.endBadRequest(res, error.message);
           return;
         }
         res.write(JSON.stringify({ success: 'Node created.', node: newNode }));
-        console.log(`Node created. ${newNode.title} for ${req.user.login}`);
+        console.log(`Node created. ${newNode.title} for ${user.login}`);
         res.end();
       });
     });
   });
 }
-function deleteNode(req, res) {
-  if (!req.match || !req.match.id) {
+function deleteNode({ req, res, match, user }) {
+  if (!match || !match.id) {
     return errors.endBadRequest(res, 'No id');
   }
-  const nodeId = { _id: req.match.id };
+  const nodeId = { _id: match.id };
 
   LocalNode.findById(nodeId._id, (err, node) => {
     if (err || !node || node.deploys.length > 0) {
@@ -61,8 +61,8 @@ function deleteNode(req, res) {
       );
     }
     if (
-      !node.usersWithAccess.some(user => user.equals(req.user._id)) &&
-      !req.user.isAdmin
+      !node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) &&
+      !user.isAdmin
     ) {
       return errors.endBadRequest(res, `You can't`);
     }
@@ -73,12 +73,12 @@ function deleteNode(req, res) {
     Promise.all(userPromises)
       .then(users => {
         const removePromises = [];
-        users.forEach((user) => {
+        users.forEach((nodeUser) => {
           if (err) {
             return errors.endServerError(res, err);
           }
-          user.localNodes.remove(nodeId._id);
-          removePromises.push(user.save());
+          nodeUser.localNodes.remove(nodeId._id);
+          removePromises.push(nodeUser.save());
         });
         Promise.all(removePromises)
           .then(() => {
@@ -91,8 +91,8 @@ function deleteNode(req, res) {
   });
 }
 
-function createDeploy(req, res) {
-  const { nodeId, deploy } = JSON.parse(req.body);
+function createDeploy({ req, res, body, match, user }) {
+  const { nodeId, deploy } = JSON.parse(body);
   if (!nodeId || !deploy || !deploy.repo || !deploy.title) {
     return errors.endBadRequest(res, 'Not enough data');
   }
@@ -104,7 +104,7 @@ function createDeploy(req, res) {
     if (err) {
       return errors.endServerError(res, err);
     }
-    if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req.user.isAdmin) {
+    if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
       return errors.endBadRequest(res, `You can't`);
     }
     if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -121,8 +121,8 @@ function createDeploy(req, res) {
     }, jstpServer);
   });
 }
-function deleteDeploy(req, res) {
-  const { nodeId, deployId } = JSON.parse(req.body);
+function deleteDeploy({ req, res, body, match, user }) {
+  const { nodeId, deployId } = JSON.parse(body);
   if (!nodeId || !deployId) {
     return errors.endBadRequest(res, 'Not enough data');
   }
@@ -130,7 +130,7 @@ function deleteDeploy(req, res) {
     if (err) {
       return errors.endServerError(res, err);
     }
-    if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req.user.isAdmin) {
+    if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
       return errors.endBadRequest(res, `You can't`);
     }
     if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -149,13 +149,13 @@ function deleteDeploy(req, res) {
       }, (err) => errors.endServerError(res, err));
   });
 };
-function getDeploy(req, res) {
-  const { nodeId, deployId } = JSON.parse(req.body);
+function getDeploy({ req, res, body, match, user }) {
+  const { nodeId, deployId } = JSON.parse(body);
   LocalNode.findById(nodeId, (err, node) => {
     if (err) {
       return errors.endServerError(res, err);
     }
-    if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req.user.isAdmin) {
+    if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
       return errors.endBadRequest(res, `You can't`);
     }
     if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -181,13 +181,13 @@ function getDeploy(req, res) {
   });
 }
 
-function stopDeploy(req, res) {
-  const { nodeId, deployId } = JSON.parse(req.body);
+function stopDeploy({ req, res, body, match, user }) {
+  const { nodeId, deployId } = JSON.parse(body);
   LocalNode.findById(nodeId, (err, node) => {
     if (err) {
       return errors.endServerError(res, err);
     }
-    if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req.user.isAdmin) {
+    if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
       return errors.endBadRequest(res, `You can't`);
     }
     if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -215,15 +215,15 @@ function stopDeploy(req, res) {
   });
 }
 
-function startDeploy(req, res) {
-  const { nodeId, deployId } = JSON.parse(req.body);
+function startDeploy({ req, res, body, match, user }) {
+  const { nodeId, deployId } = JSON.parse(body);
   LocalNode.findById(nodeId, (err, node) => {
     if (err) {
       return errors.endServerError(res, err);
     }
     if (
-      !node.usersWithAccess.some(user => user.equals(req.user._id)) &&
-      !req.user.isAdmin
+      !node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) &&
+      !user.isAdmin
     ) {
       return errors.endBadRequest(res, `You can't`);
     }
@@ -251,13 +251,13 @@ function startDeploy(req, res) {
       }, (err) => errors.endServerError(res, err));
   });
 }
-function fetchDeploy(req, res) {
-  const { nodeId, deployId } = JSON.parse(req.body);
+function fetchDeploy({ req, res, body, match, user }) {
+  const { nodeId, deployId } = JSON.parse(body);
   LocalNode.findById(nodeId, (err, node) => {
     if (err) {
       return errors.endServerError(res, err);
     }
-    if (!node.usersWithAccess.some(user => user.equals(req.user._id)) && !req.user.isAdmin) {
+    if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
       return errors.endBadRequest(res, `You can't`);
     }
     if (!jstpServer.isNodeConnected(node.jstpLogin)) {
@@ -284,7 +284,7 @@ function fetchDeploy(req, res) {
       }, (err) => errors.endServerError(res, err));
   });
 }
-function webhooks(req, res) {
+function webhooks({ req, res }) {
   const token = req.headers['x-hub-signature'] || req.headers['x-gitlab-token'];
   if (!token) {
     return errors.endUnauthorised(res);

@@ -12,14 +12,14 @@ const errors = require('../lib/error-res');
 * @param {Request} req
 * @param {Response} res
 */
-function registerUser(req, res) {
+function registerUser({ req, res, body, match, user }) {
   if (!config.registrationAllowed) {
     return errors.endBadRequest(
       res,
       'Registration is disabled. Ask your system administrator.'
     );
   }
-  const newUser = JSON.parse(req.body);
+  const newUser = JSON.parse(body);
   if (!newUser.name || !newUser.password || !newUser.login) {
     errors.endBadRequest(res, 'Not enough info.');
     return;
@@ -51,8 +51,8 @@ function registerUser(req, res) {
 * @param {Request} req
 * @param {Response} res
 */
-function getToken(req, res) {
-  const user = JSON.parse(req.body);
+function getToken({ req, res, body, match }) {
+  const user = JSON.parse(body);
   if (!user.password || !user.login) {
     errors.endBadRequest(res, 'Not enough info.');
     return;
@@ -80,8 +80,8 @@ function getToken(req, res) {
     }
   );
 }
-function getNodes(req, res) {
-  if (req.user.isAdmin) {
+function getNodes({ req, res, body, match, user }) {
+  if (user.isAdmin) {
     LocalNode.find({}, (err, objects) => {
       res.write(JSON.stringify(objects.map(node => ({
         _id: node._id,
@@ -121,8 +121,8 @@ function getNodes(req, res) {
     }
   );
 }
-function addNode(req, res) {
-  const nodeId = JSON.parse(req.body);
+function addNode({ req, res, body, match, user }) {
+  const nodeId = JSON.parse(body);
   if (!nodeId || !nodeId.jstpLogin || !nodeId.jstpPassword) {
     return errors.endBadRequest(res, 'Not enogh info');
   }
@@ -133,7 +133,7 @@ function addNode(req, res) {
     if (!node) {
       return errors.endNotFound(res);
     }
-    if (req.user.localNodes.find(i => i === node._id)) {
+    if (user.localNodes.find(i => i === node._id)) {
       res.write(JSON.stringify({ error: 'You already have this node.' }));
       return res.end();
     }
@@ -142,9 +142,9 @@ function addNode(req, res) {
         return errors.endServerError(res, err);
       }
       if (match) {
-        req.user.localNodes.push(node._id);
-        req.user.save(() => {
-          node.usersWithAccess.push(req.user._id);
+        user.localNodes.push(node._id);
+        user.save(() => {
+          node.usersWithAccess.push(user._id);
           node.save(() => {
             res.write(JSON.stringify({
               success: 'Node added',
@@ -174,8 +174,8 @@ function addNode(req, res) {
   });
 }
 
-function getUsers(req, res) {
-  if (!req.user.isAdmin) {
+function getUsers({ req, res, body, match, user }) {
+  if (!user.isAdmin) {
     return errors.endUnauthorised(res);
   }
   User.find({}, (err, users) => {
@@ -193,19 +193,19 @@ function getUsers(req, res) {
     res.end();
   });
 }
-function getUser(req, res) {
+function getUser({ req, res, body, match, user }) {
   res.write(JSON.stringify({
-    name: req.user.name,
-    login: req.user.login,
-    isAdmin: req.user.isAdmin
+    name: user.name,
+    login: user.login,
+    isAdmin: user.isAdmin
   }));
   res.end();
 }
-function changeUserStatus(req, res) {
-  if (!req.user.isAdmin) {
+function changeUserStatus({ req, res, body, match, user }) {
+  if (!user.isAdmin) {
     return errors.endUnauthorised(res);
   }
-  const b = JSON.parse(req.body);
+  const b = JSON.parse(body);
   if (!b.userId) {
     return errors.endBadRequest(res, 'No id provided');
   }
@@ -221,8 +221,8 @@ function changeUserStatus(req, res) {
       );
   });
 }
-function toggleRegistration(req, res) {
-  if (!req.user.isAdmin) {
+function toggleRegistration({ req, res, body, match, user }) {
+  if (!user.isAdmin) {
     return errors.endUnauthorised(res);
   }
   config.registrationAllowed = !config.registrationAllowed;
@@ -232,7 +232,7 @@ function toggleRegistration(req, res) {
   }));
   res.end();
 }
-function registrationAllowed(req, res) {
+function registrationAllowed({ req, res, body, match, user }) {
   console.log('Registration allowed: ' + config.registrationAllowed);
   res.write(JSON.stringify({
     allowed: config.registrationAllowed
