@@ -29,11 +29,8 @@ function registerUser({ req, res, body, match, user }) {
     if (err) {
       errors.endBadRequest(res);
     }
-    if (c === 0) {
-      u.isAdmin = true;
-    } else {
-      u.isAdmin = false;
-    }
+    u.isAdmin = c === 0;
+
     u.save((error) => {
       if (error) {
         errors.endBadRequest(res, error.message);

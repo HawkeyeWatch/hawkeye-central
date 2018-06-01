@@ -27,94 +27,69 @@ function noMethodHandler(path, method, req, res) {
 
 const router = new Router(noRouteHandler, noMethodHandler);
 
-router.assignRoute(
-  'POST',
-  '/user',
-  bodyUnpacker(user.post)
-);
-router.assignRoute(
-  'GET',
-  '/user',
-  jwtAuth(user.getUser)
-);
-router.assignRoute(
-  'POST',
-  '/user/login',
-  bodyUnpacker(user.getToken)
-);
-router.assignRoute(
-  'GET',
-  '/user/nodes',
-  jwtAuth(user.getNodes)
-);
-router.assignRoute(
-  'POST',
-  '/user/addnode',
-  jwtAuth(bodyUnpacker(user.addNode))
-);
-router.assignRoute(
-  'GET',
-  '/user/all',
-  jwtAuth(user.getUsers)
-);
-router.assignRoute(
-  'POST',
-  '/user/promote',
-  jwtAuth(bodyUnpacker(user.changeUserStatus))
-);
-router.assignRoute(
-  'POST',
-  '/user/togglereg',
-  jwtAuth(user.toggleRegistration)
-);
-router.assignRoute(
-  'GET',
-  '/user/regallowed',
-  user.registrationAllowed
-);
+const routes = {
+  '/user': {
+    'POST': bodyUnpacker(user.post),
+    'GET': jwtAuth(user.getUser),
+  },
+  '/user/login': {
+    'POST': bodyUnpacker(user.getToken),
+  },
+  '/user/nodes': {
+    'GET': jwtAuth(user.getNodes),
+  },
+  '/user/addnode': {
+    'POST': jwtAuth(bodyUnpacker(user.addNode)),
+  },
+  'user/all': {
+    'GET': jwtAuth(user.getUsers),
+  },
+  '/user/promote': {
+    'POST': jwtAuth(bodyUnpacker(user.changeUserStatus)),
+  },
+  '/user/togglereg': {
+    'POST': jwtAuth(user.toggleRegistration),
+  },
+  '/user/regallowed': {
+    'GET': user.registrationAllowed,
+  },
 
-router.assignRoute(
-  'POST',
-  '/node',
-  jwtAuth(bodyUnpacker(localNode.createNode))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy',
-  jwtAuth(bodyUnpacker(localNode.createDeploy))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy/delete',
-  jwtAuth(bodyUnpacker(localNode.deleteDeploy))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy/get',
-  jwtAuth(bodyUnpacker(localNode.getDeploy))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy/start',
-  jwtAuth(bodyUnpacker(localNode.startDeploy))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy/stop',
-  jwtAuth(bodyUnpacker(localNode.stopDeploy))
-);
-router.assignRoute(
-  'POST',
-  '/node/deploy/fetch',
-  jwtAuth(bodyUnpacker(localNode.fetchDeploy))
-);
-router.assignRoute(
-  'DELETE',
-  '/node/delete/:id',
-  jwtAuth(bodyUnpacker(localNode.deleteNode))
-);
+  '/node': {
+    'POST': jwtAuth(bodyUnpacker(localNode.createNode)),
+  },
+  '/node/deploy': {
+    'POST': jwtAuth(bodyUnpacker(localNode.createDeploy)),
+  },
+  '/node/deploy/delete': {
+    'POST': jwtAuth(bodyUnpacker(localNode.deleteDeploy)),
+  },
+  '/node/deploy/get': {
+    'POST': jwtAuth(bodyUnpacker(localNode.getDeploy)),
+  },
+  '/node/deploy/start': {
+    'POST': jwtAuth(bodyUnpacker(localNode.startDeploy)),
+  },
+  '/node/deploy/stop': {
+    'POST': jwtAuth(bodyUnpacker(localNode.stopDeploy)),
+  },
+  '/node/deploy/fetch': {
+    'POST': jwtAuth(bodyUnpacker(localNode.fetchDeploy)),
+  },
+  '/node/delete/:id': {
+    'DELETE': jwtAuth(bodyUnpacker(localNode.deleteNode)),
+  },
 
-router.assignRoute('POST', '/webhooks', bodyUnpacker(localNode.webhooks));
+  '/webhooks': {
+    'POST': bodyUnpacker(localNode.webhooks),
+  },
+};
+
+
+for (const route in routes) {
+  for (const method in routes[route]) {
+    router.assignRoute(method, route, routes[route][method]);
+  }
+}
 
 const server = function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

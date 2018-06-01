@@ -148,7 +148,8 @@ function deleteDeploy({ req, res, body, match, user }) {
         res.end();
       }, (err) => errors.endServerError(res, err));
   });
-};
+}
+
 function getDeploy({ req, res, body, match, user }) {
   const { nodeId, deployId } = JSON.parse(body);
   LocalNode.findById(nodeId, (err, node) => {
@@ -179,6 +180,29 @@ function getDeploy({ req, res, body, match, user }) {
         res.end();
       }, (err) => errors.endServerError(res, err));
   });
+}
+
+function deployActionGenerator(actionCallback) {
+  return ({ req, res, body, match, user }) => {
+    const { nodeId, deployId } = JSON.parse(body);
+    LocalNode.findById(nodeId, (err, node) => {
+      if (err) {
+        return errors.endServerError(res, err);
+      }
+      if (!node.usersWithAccess.some(possibleUser => possibleUser.equals(user._id)) && !user.isAdmin) {
+        return errors.endBadRequest(res, `You can't`);
+      }
+      if (!jstpServer.isNodeConnected(node.jstpLogin)) {
+        res.write(JSON.stringify({ error: 'Node is not connected.' }));
+        return res.end();
+      }
+      const deploy = node.deploys.id(deployId);
+      if (!deploy) {
+        return errors.endBadRequest(res, 'Deploy is not existing.');
+      }
+      actionCallback(res, node, deploy);
+    });
+  };
 }
 
 function stopDeploy({ req, res, body, match, user }) {
