@@ -2,7 +2,7 @@
 
 const User = require('../models/user');
 const LocalNode = require('../models/localNode');
-const jstpServer = require('../config/jstp');
+const jstpServer = require('../lib/jstp');
 
 const config = require('../config');
 
@@ -100,7 +100,7 @@ function getNodes({ req, res, body, match, user }) {
     return;
   }
   const nodePromises = [];
-  req.user.localNodes.forEach(node => {
+  user.localNodes.forEach(node => {
     nodePromises.push(LocalNode.findById(node));
   });
   Promise.all(nodePromises).then(
