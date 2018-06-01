@@ -5,15 +5,6 @@ const config = require('./');
 const LocalNode = require('../models/localNode');
 
 class JSTPServer {
-  constructor() {
-    if (!JSTPServer.instance) {
-      JSTPServer.instance = this;
-      this._nodes = new Map();
-    }
-
-    return JSTPServer.instance;
-  }
-
   /**
    Initialises JSTP server instance
    */

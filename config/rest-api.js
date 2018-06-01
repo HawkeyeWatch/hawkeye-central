@@ -7,19 +7,10 @@ const bodyUnpacker = require('../lib/body-unpacker');
 const jwtAuth = require('../lib/jwt-auth');
 const errors = require('../lib/error-res');
 
-const root = require('../routes/root');
 const user = require('../routes/user');
 const localNode = require('../routes/local-node');
 
 module.exports = {};
-
-function someMiddleware(handler) {
-  return (req, res) => {
-    res.write('middlewared ');
-    handler(req, res);
-  };
-}
-
 function noRouteHandler(path, method, req, res) {
   res.statusCode = 404;
   res.statusMessage = 'Not Found';
@@ -36,13 +27,6 @@ function noMethodHandler(path, method, req, res) {
 
 const router = new Router(noRouteHandler, noMethodHandler);
 
-router.assignRoute('GET', '/', root.get);
-router.assignRoute('POST', '/', bodyUnpacker(root.post));
-router.assignRoute(
-  'GET',
-  '/middlewaredemo',
-  someMiddleware(require('../routes/root'))
-);
 router.assignRoute(
   'POST',
   '/user',
