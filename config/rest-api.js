@@ -84,12 +84,7 @@ const routes = {
   },
 };
 
-
-for (const route in routes) {
-  for (const method in routes[route]) {
-    router.assignRoute(method, route, routes[route][method]);
-  }
-}
+router.assignMultipleRoutes(routes);
 
 const server = function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
