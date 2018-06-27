@@ -1,0 +1,32 @@
+{
+  "name": "git-watcher-central",
+  "version": "0.0.1",
+  "description": "Central server for git-watcher.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/revan730/central-git-watcher.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/revan730/central-git-watcher/issues"
+  },
+  "homepage": "https://github.com/revan730/central-git-watcher#readme",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "jsonwebtoken": "^8.2.0",
+    "metarhia-jstp": "^1.1.0",
+    "moment": "^2.21.0",
+    "mongoose": "^5.0.12",
+    "mongoose-beautiful-unique-validation": "^7.1.1",
+    "route-parser": "0.0.5",
+    "rand-token": "^0.4.0"
+  },
+  "bin": {
+    "git-watcher": "./index.js"
+  }
+}
